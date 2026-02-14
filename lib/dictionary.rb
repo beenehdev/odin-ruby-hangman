@@ -12,7 +12,7 @@ module Hangman
     end
 
     def random_word
-      @list.sample
+      @list.sample.split
     end
   end
 end
