@@ -3,9 +3,11 @@
 module Hangman
   # Responsible for translating and validating between human interaction and game actions.
   class Interface
+    attr_reader :special_commands, :alphabet
+
     def initialize
       @save = false
-      @alphabet = (a..z).to_a
+
       @special_commands = %w[save load exit]
     end
 
@@ -15,19 +17,25 @@ module Hangman
         print '> '
         input = gets.chomp.strip.downcase
 
-        return input if valid_options.include?(input)
+        return input if valid_options.include?(input) || @special_commands.include?(input)
 
-        puts "Invalid input. Please type #{valid_options.join(' or ')}."
+        puts 'Invalid input.'
       end
     end
 
     def welcome
-      puts 'Welcome to Hangman! Type "play", "load", or "exit".'
-      ask_user('play', *@special_commands)
+      puts 'Welcome to Hangman! Type "start", "load", or "exit".'
     end
 
-    def guess_letter
-      ask_user(*@alphabet, *@special_commands)
+    def start
+      puts "The word is set! \nRemember, you can 'save', 'load', or 'exit' at any time!"
+    end
+
+    def guess
+      puts 'Guess a letter!'
+    end
+
+    def draw_cli_board(secret, guesses)
     end
   end
 end
