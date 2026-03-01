@@ -3,14 +3,14 @@
 module Hangman
   # Responsible for orchestrating gameflow of hangman
   class Game
-    attr_reader :round_running, :save_exists
+    attr_reader :round_running
 
     def initialize(interface, dictionary, save_manager)
       @interface = interface
       @dictionary = dictionary
       @save_manager = save_manager
 
-      @alphabet = (a..z).to_a
+      @alphabet = ('a'..'z').to_a
       @max_incorrect = 8
       @round_running = false
     end
@@ -22,10 +22,11 @@ module Hangman
     end
 
     def exit_game
+      exit!
     end
 
-    def input_director(arg)
-      result = @interface.ask_user(arg)
+    def input_director(*args)
+      result = @interface.ask_user(*args)
 
       return result unless @interface.special_commands.include?(result)
 
@@ -75,8 +76,18 @@ module Hangman
       @interface.draw_cli_board(secret, guesses)
     end
 
-    def finish_game(secret, guesses)
-      does stuff etc
+    def finish(secret, guesses)
+      if (secret - guesses).empty?
+        @interface.win
+      elsif (guesses - secret).count >= @max_incorrect
+        @interface.lose
+      end
+
+      @interface.end
+      result = input_director('yes', 'no')
+
+      play if result == 'yes'
+      exit_game if result == 'no'
     end
 
     def play
@@ -91,7 +102,7 @@ module Hangman
       end
       @round_running = false
 
-      finish_game(secret, guesses)
+      finish(secret, guesses)
     end
   end
 end
