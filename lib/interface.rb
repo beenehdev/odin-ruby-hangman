@@ -8,6 +8,7 @@ module Hangman
     def initialize
       @save = false
 
+      @max_incorrect = 8
       @special_commands = %w[save load exit]
     end
 
@@ -23,6 +24,24 @@ module Hangman
       end
     end
 
+    def draw_hangman(incorrect_guesses)
+    end
+
+    def draw_cli_board(secret, guesses)
+      answers = guesses
+      secret.each do |i|
+        if guesses.include?(i)
+          print "#{i} "
+          answers.remove(i)
+        else
+          print '_ '
+        end
+
+        puts "\n Incorrect letters: #{answers}. Lives left: #{answers.length - @max_incorrect}"
+        draw_hangman(answers.length)
+      end
+    end
+
     def welcome
       puts 'Welcome to Hangman! Type "start", "load", or "exit".'
     end
@@ -33,9 +52,6 @@ module Hangman
 
     def guess
       puts 'Guess a letter!'
-    end
-
-    def draw_cli_board(secret, guesses)
     end
   end
 end
