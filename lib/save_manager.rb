@@ -5,22 +5,24 @@ require 'json'
 module Hangman
   # Responsible for saving and loading game data
   class SaveManager
-    attr_reader :save_exists
+    PATH = File.expand_path('../saves/save.json', __dir__)
 
-    def initialize(stuff, things)
-      @save_exists = true if document(has_savedata)
-      @data_snapshot = [stuff, things]
+    attr_reader :has_savedata
+
+    def initialize
+      @has_savedata = File.exist?(PATH) && !File.empty?(PATH)
     end
 
-    def save
-      File.write('../saves/save.json') do |f|
-        f.write(@data_snapshot.to_json)
-      end
+    def save(data_snapshot)
+      File.write(PATH, JSON.generate(data_snapshot))
+      @has_savedata = true
     end
 
     def load
-      file = File.read('../saves/save.json', &:read)
-      data_hash = JSON.parse(file)
+      return nil unless @has_savedata
+
+      file = File.read(PATH)
+      JSON.parse(file)
     end
   end
 end
