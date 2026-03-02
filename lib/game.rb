@@ -16,9 +16,14 @@ module Hangman
     end
 
     def save_game
+      # need to store secret and array of guesses in an array of [a, b[c, d, e]]
     end
 
     def load_game
+      # need to load secret (array of values), array of guesses [a[1, 2, 3], b[c, d, e]], then use to restore state in play
+      data_hash = @save_manager.load
+      secret = data_hash[0]
+      guesses = data_hash[1]
     end
 
     def exit_game
