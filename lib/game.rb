@@ -1,33 +1,38 @@
 # frozen_string_literal: true
 
+require_relative 'save_manager'
+require_relative 'state_manager'
+
 module Hangman
   # Responsible for orchestrating gameflow of hangman
   class Game
     attr_reader :round_running
 
-    def initialize(interface, dictionary, save_manager)
+    def initialize(interface, dictionary)
       @interface = interface
       @dictionary = dictionary
-      @save_manager = save_manager
 
-      @alphabet = ('a'..'z').to_a
       @max_incorrect = 8
-      @round_running = false
+      @alphabet = ('a'..'z').to_a
+      @play_again = false
+
+      @save_manager = SaveManager.New
+      @state_manager = StateManager.New(@max_incorrect)
     end
 
     def save_game
       # need to store secret and array of guesses in an array of [a, b[c, d, e]]
+      # needs secret and guesses, make instance variables and retool?
     end
 
     def load_game
-      # need to load secret (array of values), array of guesses [a[1, 2, 3], b[c, d, e]], then use to restore state in play
       data_hash = @save_manager.load
-      secret = data_hash[0]
-      guesses = data_hash[1]
+      @state_manager.secret = data_hash[0]
+      @state_manager.guesses = data_hash[1]
     end
 
     def exit_game
-      exit!
+      exit
     end
 
     def input_director(*args)
@@ -44,27 +49,13 @@ module Hangman
       nil
     end
 
-    def welcome
-      @interface.welcome
-
-      loop do
-        result = input_director('start')
-
-        next if result.nil?
-
-        break
-      end
+    def set
+      @interface.set
+      @state_manager.secret = @dictionary.random_word
+      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses)
     end
 
-    def start
-      @interface.start
-      secret = @dictionary.random_word
-      @interface.draw_cli_board(secret, [])
-
-      secret
-    end
-
-    def round(secret, guesses)
+    def round
       @interface.guess
       guess = nil
 
@@ -72,42 +63,53 @@ module Hangman
         guess = input_director(@alphabet)
 
         next if guess.nil?
-        next if guesses.include?(guess)
+        next if @state_manager.guesses.include?(guess)
 
-        guesses << guess
+        @state_manager.guesses << guess
         break
       end
 
-      @interface.draw_cli_board(secret, guesses)
+      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses)
     end
 
-    def finish(secret, guesses)
-      if (secret - guesses).empty?
-        @interface.win
-      elsif (guesses - secret).count >= @max_incorrect
-        @interface.lose
-      end
+    def finish
+      @state_manager.win? ? @interface.win : @interface.lose
 
       @interface.end
       result = input_director('yes', 'no')
 
-      play if result == 'yes'
-      exit_game if result == 'no'
+      @play_again = true if result == 'yes'
+      @play_again = false if result == 'no'
     end
 
     def play
-      welcome
-      secret = start
-      guesses = []
+      @interface.secret = set
       @round_running = true
 
       loop do
-        round(secret, guesses)
-        break if (secret - guesses).empty? || (guesses - secret).count >= @max_incorrect
+        round
+        break if [true, false].include?(@state_manager.win_or_lose?)
       end
       @round_running = false
 
-      finish(secret, guesses)
+      finish
+    end
+
+    def start
+      @interface.start
+
+      loop do
+        next if input_director('start').nil?
+
+        break
+      end
+
+      loop do
+        play
+        break unless @play_again == true
+      end
+
+      exit_game
     end
   end
 end
