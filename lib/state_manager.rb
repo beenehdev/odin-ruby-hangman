@@ -2,7 +2,7 @@
 
 module Hangman
   # Responsible for persisting state of game values to allow dynamic access and restoration thru save manager
-  class SaveManager
+  class StateManager
     attr_accessor :secret, :guesses, :round_running
 
     def initialize(max_incorrect)
@@ -12,13 +12,11 @@ module Hangman
       @round_running = false
     end
 
-    def win?
-      if (@state_manager.secret - @state_manager.guesses).empty?
+    def win_or_lose?
+      if (@secret - @guesses).empty?
         true
-      elsif (@state_manager.guesses - @state_manager.secret).count >= @max_incorrect
+      elsif (@guesses - @secret).count >= @max_incorrect
         false
-      else
-        'Third return value'
       end
     end
   end

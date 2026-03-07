@@ -13,45 +13,78 @@ module Hangman
     end
 
     def ask_user(*valid_options)
-      valid_options.map!(&:downcase)
+      valid_options.flatten.map!(&:downcase)
       loop do
         print '> '
         input = gets.chomp.strip.downcase
 
-        return input if valid_options.include?(input) || @special_commands.include?(input)
+        return input if valid_options.flatten.include?(input) || @special_commands.include?(input)
 
         puts 'Invalid input.'
       end
     end
 
-    def draw_hangman(incorrect_guesses)
-    end
-
     def draw_cli_board(secret, guesses)
-      answers = guesses
+      answers = guesses.dup
       secret.each do |i|
         if guesses.include?(i)
           print "#{i} "
-          answers.remove(i)
+          answers.delete(i)
         else
           print '_ '
         end
-
-        puts "\n Incorrect letters: #{answers}. Lives left: #{answers.length - @max_incorrect}"
-        draw_hangman(answers.length)
       end
+
+      puts "\n Incorrect letters: #{answers}. Lives left: #{@max_incorrect - answers.length}"
     end
 
-    def welcome
-      puts 'Welcome to Hangman! Type "start", "load", or "exit".'
+    def warn_duplicate
+      puts 'Duplicate letter, please re-enter a new guess.'
+    end
+
+    def warn_load
+      puts 'No save-data to load!'
+    end
+
+    def warn_save
+      puts 'There is no running game to save!'
     end
 
     def start
+      puts 'Welcome to Hangman! Type "start", "load", or "exit".'
+    end
+
+    def resume
+      puts 'Previous save loaded! Resuming from previous position.'
+    end
+
+    def set
       puts "The word is set! \nRemember, you can 'save', 'load', or 'exit' at any time!"
     end
 
     def guess
       puts 'Guess a letter!'
+    end
+
+    def save
+      puts 'successfully saved!'
+    end
+
+    def win
+      puts 'You won!'
+    end
+
+    def lose
+      puts 'You lost!'
+    end
+
+    def end(secret)
+      puts "The word was #{secret.join}!"
+      puts "Would you like to play again? Type 'yes', or 'no'"
+    end
+
+    def exit
+      puts 'Closing game!'
     end
   end
 end

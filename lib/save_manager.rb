@@ -7,10 +7,11 @@ module Hangman
   class SaveManager
     PATH = File.expand_path('../saves/save.json', __dir__)
 
-    attr_reader :has_savedata
+    attr_accessor :has_savedata, :is_loading
 
     def initialize
       @has_savedata = File.exist?(PATH) && !File.empty?(PATH)
+      @is_loading = false
     end
 
     def save(data_snapshot)
@@ -20,6 +21,8 @@ module Hangman
 
     def load
       return nil unless @has_savedata
+
+      @is_loading = true
 
       file = File.read(PATH)
       JSON.parse(file)

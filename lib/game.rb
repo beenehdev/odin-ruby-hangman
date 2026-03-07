@@ -16,22 +16,38 @@ module Hangman
       @alphabet = ('a'..'z').to_a
       @play_again = false
 
-      @save_manager = SaveManager.New
-      @state_manager = StateManager.New(@max_incorrect)
+      @save_manager = SaveManager.new
+      @state_manager = StateManager.new(@max_incorrect)
     end
 
     def save_game
-      # need to store secret and array of guesses in an array of [a, b[c, d, e]]
-      # needs secret and guesses, make instance variables and retool?
+      unless @round_running
+        @interface.warn_save
+        return nil
+      end
+
+      data_hash = [@state_manager.secret, @state_manager.guesses]
+      @save_manager.save(data_hash)
+
+      @interface.save
     end
 
     def load_game
+      unless @save_manager.has_savedata
+        @interface.warn_load
+        return nil
+      end
+
       data_hash = @save_manager.load
       @state_manager.secret = data_hash[0]
       @state_manager.guesses = data_hash[1]
+
+      resume
     end
 
     def exit_game
+      @interface.exit
+
       exit
     end
 
@@ -51,7 +67,10 @@ module Hangman
 
     def set
       @interface.set
-      @state_manager.secret = @dictionary.random_word
+      unless @save_manager.is_loading
+        @state_manager.secret = @dictionary.random_word
+        @state_manager.guesses = []
+      end
       @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses)
     end
 
@@ -62,8 +81,11 @@ module Hangman
       loop do
         guess = input_director(@alphabet)
 
+        if @state_manager.guesses.include?(guess)
+          @interface.warn_duplicate
+          next
+        end
         next if guess.nil?
-        next if @state_manager.guesses.include?(guess)
 
         @state_manager.guesses << guess
         break
@@ -73,26 +95,33 @@ module Hangman
     end
 
     def finish
-      @state_manager.win? ? @interface.win : @interface.lose
+      @state_manager.win_or_lose? ? @interface.win : @interface.lose
 
-      @interface.end
+      @interface.end(@state_manager.secret)
       result = input_director('yes', 'no')
 
-      @play_again = true if result == 'yes'
-      @play_again = false if result == 'no'
+      @play_again = result == 'yes'
     end
 
     def play
-      @interface.secret = set
+      set
       @round_running = true
 
       loop do
         round
-        break if [true, false].include?(@state_manager.win_or_lose?)
+        break unless @state_manager.win_or_lose?.nil?
       end
       @round_running = false
 
       finish
+    end
+
+    def run_game_loop
+      loop do
+        play
+        @save_manager.is_loading = false
+        break unless @play_again
+      end
     end
 
     def start
@@ -104,11 +133,13 @@ module Hangman
         break
       end
 
-      loop do
-        play
-        break unless @play_again == true
-      end
+      run_game_loop
+      exit_game
+    end
 
+    def resume
+      @interface.resume
+      run_game_loop
       exit_game
     end
   end

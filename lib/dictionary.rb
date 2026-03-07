@@ -4,6 +4,7 @@ module Hangman
   # Responsible for providing word list from file
   class Dictionary
     PATH = File.expand_path('../data/google-10000-english-no-swears.txt', __dir__)
+
     def initialize
       File.open(PATH, 'r') do |file|
         @list = file.readlines
@@ -13,7 +14,7 @@ module Hangman
     end
 
     def random_word
-      @list.sample.split
+      @list.sample.chars
     end
   end
 end
