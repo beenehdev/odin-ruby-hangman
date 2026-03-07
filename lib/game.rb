@@ -2,22 +2,22 @@
 
 require_relative 'save_manager'
 require_relative 'state_manager'
+require_relative 'interface'
 
 module Hangman
   # Responsible for orchestrating gameflow of hangman
   class Game
     attr_reader :round_running
 
-    def initialize(interface, dictionary)
-      @interface = interface
+    def initialize(dictionary)
       @dictionary = dictionary
 
-      @max_incorrect = 8
       @alphabet = ('a'..'z').to_a
       @play_again = false
 
+      @interface = Interface.new
       @save_manager = SaveManager.new
-      @state_manager = StateManager.new(@max_incorrect)
+      @state_manager = StateManager.new
     end
 
     def save_game
@@ -71,7 +71,7 @@ module Hangman
         @state_manager.secret = @dictionary.random_word
         @state_manager.guesses = []
       end
-      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses)
+      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses, @state_manager.max_incorrect)
     end
 
     def round
@@ -81,17 +81,18 @@ module Hangman
       loop do
         guess = input_director(@alphabet)
 
+        next if guess.nil?
+
         if @state_manager.guesses.include?(guess)
           @interface.warn_duplicate
           next
         end
-        next if guess.nil?
 
         @state_manager.guesses << guess
         break
       end
 
-      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses)
+      @interface.draw_cli_board(@state_manager.secret, @state_manager.guesses, @state_manager.max_incorrect)
     end
 
     def finish

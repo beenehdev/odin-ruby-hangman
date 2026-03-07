@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 module Hangman
-  # Responsible for persisting state of game values to allow dynamic access and restoration thru save manager
+  # Responsible for persisting state of game values
   class StateManager
-    attr_accessor :secret, :guesses, :round_running
+    attr_accessor :secret, :guesses, :round_running, :max_incorrect
 
-    def initialize(max_incorrect)
-      @max_incorrect = max_incorrect
+    def initialize
+      @max_incorrect = 8
       @secret = []
       @guesses = []
       @round_running = false

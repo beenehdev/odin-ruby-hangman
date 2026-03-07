@@ -8,7 +8,6 @@ module Hangman
     def initialize
       @save = false
 
-      @max_incorrect = 8
       @special_commands = %w[save load exit]
     end
 
@@ -24,7 +23,7 @@ module Hangman
       end
     end
 
-    def draw_cli_board(secret, guesses)
+    def draw_cli_board(secret, guesses, max_incorrect)
       answers = guesses.dup
       secret.each do |i|
         if guesses.include?(i)
@@ -35,7 +34,7 @@ module Hangman
         end
       end
 
-      puts "\n Incorrect letters: #{answers}. Lives left: #{@max_incorrect - answers.length}"
+      puts "\n Incorrect letters: #{answers}. Lives left: #{max_incorrect - answers.length}"
     end
 
     def warn_duplicate
@@ -43,7 +42,7 @@ module Hangman
     end
 
     def warn_load
-      puts 'No save-data to load!'
+      puts 'No save data to load!'
     end
 
     def warn_save
